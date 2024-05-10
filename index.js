@@ -59,9 +59,8 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
-    const artCraftCollection = client.db('artCraftDB').collection('artCraft');
+    const productQueryCollection = client.db('productQueriesDB').collection('productQuery');
     const SubcategoryCollection = client.db('artCraftSubcategoryDB').collection('artCraftSubcategory');
-
 
 
     // jwt generate
@@ -92,6 +91,7 @@ async function run() {
     })
 
 
+    
 
     app.get('/artCraft', async (req , res) => {
       try {
