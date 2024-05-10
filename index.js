@@ -91,11 +91,11 @@ async function run() {
     })
 
 
-    
 
-    app.get('/artCraft', async (req , res) => {
+
+    app.get('/getSingleQuery', async (req , res) => {
       try {
-        const cursor = artCraftCollection.find();
+        const cursor = productQueryCollection.find();
         const result = await cursor.toArray();
         res.send(result);
       }
@@ -109,7 +109,7 @@ async function run() {
       try {
         const id = req.params.id;
         const query = { _id: new ObjectId(id) }
-        const result = await artCraftCollection.findOne(query);
+        const result = await productQueryCollection.findOne(query);
         res.send(result);
       }
       catch (error) {
@@ -122,7 +122,7 @@ async function run() {
     app.get("/myArtCraft/:email", async (req, res) => {
     try {
       console.log(req.params.email);
-      const result = await artCraftCollection.find({ userEmail: req.params.email }).toArray();
+      const result = await productQueryCollection.find({ userEmail: req.params.email }).toArray();
         console.log(result)
         res.send(result)
       }
@@ -132,13 +132,13 @@ async function run() {
 
     })
 
-        
+    
 
-    app.post('/addArtCraftItem', async (req, res) => {
+    app.post('/addSingleQuery',verifyToken, async (req, res) => {
       try {
-        const newArtCraft = req.body;
-        console.log(newArtCraft);
-        const result = await artCraftCollection.insertOne(newArtCraft);
+        const newProduct = req.body;
+        console.log(newProduct);
+        const result = await productQueryCollection.insertOne(newProduct);
         res.send(result);
       }
       catch (error) {
@@ -166,7 +166,7 @@ async function run() {
           }
       }
 
-      const result = await artCraftCollection.updateOne(filter, item, options);
+      const result = await productQueryCollection.updateOne(filter, item, options);
       res.send(result);
   })
 
@@ -174,7 +174,7 @@ async function run() {
    try{
     const id = req.params.id;
     const query = { _id: new ObjectId(id) }
-    const result = await artCraftCollection.deleteOne(query);
+    const result = await productQueryCollection.deleteOne(query);
     res.send(result);
    }
    catch (error) {
@@ -223,9 +223,9 @@ run().catch(console.dir);
 
  
 app.get('/', (req, res) => {
-  res.send('Art and Craft server')
+  res.send('Akeneo server')
 })
 
 app.listen(port, () => {
-  console.log(`Art & Craft Server is running on port: ${port}`)
+  console.log(`Akeneo Server is running on port: ${port}`)
 })
