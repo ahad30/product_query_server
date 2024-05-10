@@ -23,6 +23,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser())
 
+
 // verify jwt middleware
 const verifyToken = (req, res, next) => {
   const token = req.cookies?.token
@@ -64,7 +65,7 @@ async function run() {
 
 
     // jwt generate
-    app.post('/jwt', async (req, res) => {
+    app.post('/jwt', async (req, res) => {    
       const email = req.body
       const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: '365d',
@@ -89,15 +90,6 @@ async function run() {
         })
         .send({ success: true })
     })
-
-
-
-
-
-
-
-
-
 
 
 
