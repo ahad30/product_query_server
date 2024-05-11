@@ -95,7 +95,7 @@ async function run() {
 
     app.get('/getSingleQuery', async (req , res) => {
       try {
-        const cursor = productQueryCollection.find();
+        const cursor = productQueryCollection.find().sort({_id:-1});
         const result = await cursor.toArray();
         res.send(result);
       }
@@ -119,10 +119,10 @@ async function run() {
 
 
 
-    app.get("/myArtCraft/:email", async (req, res) => {
+    app.get("/mySingleQuery/:email", async (req, res) => {
     try {
       console.log(req.params.email);
-      const result = await productQueryCollection.find({ userEmail: req.params.email }).toArray();
+      const result = await productQueryCollection.find({ 'posterInfo.userEmail': req.params.email }).sort({_id:-1}).toArray();
         console.log(result)
         res.send(result)
       }
