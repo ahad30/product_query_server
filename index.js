@@ -134,7 +134,7 @@ async function run() {
 
     
 
-    app.post('/addSingleQuery',verifyToken, async (req, res) => {
+    app.post('/addSingleQuery', async (req, res) => {
       try {
         const newProduct = req.body;
         console.log(newProduct);
