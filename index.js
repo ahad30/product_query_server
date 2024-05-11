@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
@@ -10,8 +10,7 @@ const port = process.env.PORT || 5000;
 const corsOptions = {
   origin: [
     'http://localhost:5173',
-    'http://localhost:5174',
-    'https://solosphere.web.app',
+    'http://localhost:5174'
   ],
   credentials: true,
   optionSuccessStatus: 200,
@@ -26,7 +25,8 @@ app.use(cookieParser())
 
 // verify jwt middleware
 const verifyToken = (req, res, next) => {
-  const token = req.cookies?.token
+  const token = req?.cookies?.token
+  console.log(token)
   if (!token) return res.status(401).send({ message: 'unauthorized access' })
   if (token) {
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
@@ -66,6 +66,7 @@ async function run() {
     // jwt generate
     app.post('/jwt', async (req, res) => {    
       const email = req.body
+      console.log(email)
       const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: '365d',
       })
@@ -80,6 +81,8 @@ async function run() {
 
     // Clear token on logout
     app.get('/logout', (req, res) => {
+      const user = req.body;
+      console.log('logging out', user);
       res
         .clearCookie('token', {
           httpOnly: true,
@@ -105,7 +108,7 @@ async function run() {
     })
 
 
-    app.get('/artCraft/:id', async (req, res) => {
+    app.get('/queryDetails/:id', async (req, res) => {
       try {
         const id = req.params.id;
         const query = { _id: new ObjectId(id) }
@@ -121,8 +124,12 @@ async function run() {
 
     app.get("/mySingleQuery/:email", async (req, res) => {
     try {
-      console.log(req.params.email);
-      const result = await productQueryCollection.find({ 'posterInfo.userEmail': req.params.email }).sort({_id:-1}).toArray();
+      // const tokenEmail = req.user.email
+      const email = req.params.email
+      // if (tokenEmail !== email) {
+      //   return res.status(403).send({ message: 'forbidden access' })
+      // }
+      const result = await productQueryCollection.find({ 'posterInfo.userEmail':email }).sort({_id:-1}).toArray();
         console.log(result)
         res.send(result)
       }
@@ -147,22 +154,14 @@ async function run() {
     })
 
 
-    app.put('/updateItem/:id', async (req, res) => {
+    app.put('/updateQueryItem/:id', async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) }
       const options = { upsert: true };
       const updatedItem = req.body;   
       const item = {
           $set: {
-            image: updatedItem.image,
-            itemName: updatedItem.itemName,
-            subcategoryName: updatedItem.subcategoryName,
-            shortDescription: updatedItem.shortDescription,
-            price: updatedItem.price,
-            rating: updatedItem.rating,
-            customization: updatedItem.customization,
-            processingTime: updatedItem.processingTime,
-            stockStatus: updatedItem.stockStatus
+            ...updatedItem       
           }
       }
 
@@ -170,7 +169,7 @@ async function run() {
       res.send(result);
   })
 
-    app.delete('/deleteQuery/:id', async (req, res) => {
+    app.delete('/deleteQueryItem/:id', async (req, res) => {
    try{
     const id = req.params.id;
     const query = { _id: new ObjectId(id) }
