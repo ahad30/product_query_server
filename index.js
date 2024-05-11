@@ -170,7 +170,7 @@ async function run() {
       res.send(result);
   })
 
-    app.delete('/deleteItem/:id', async (req, res) => {
+    app.delete('/deleteQuery/:id', async (req, res) => {
    try{
     const id = req.params.id;
     const query = { _id: new ObjectId(id) }
