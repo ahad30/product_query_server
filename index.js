@@ -128,7 +128,7 @@ async function run() {
       const email = req.params.email
       // if (tokenEmail !== email) {
       //   return res.status(403).send({ message: 'forbidden access' })
-      // }
+      // }              
       const result = await productQueryCollection.find({ 'posterInfo.userEmail':email }).sort({_id:-1}).toArray();
         console.log(result)
         res.send(result)
