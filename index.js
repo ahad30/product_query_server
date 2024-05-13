@@ -60,11 +60,12 @@ async function run() {
     // await client.connect();
 
     const productQueryCollection = client.db('productQueriesDB').collection('productQuery');
-    const SubcategoryCollection = client.db('artCraftSubcategoryDB').collection('artCraftSubcategory');
+    const recommendQueryCollection = client.db('recommendQueryDB').collection('recommendQuery');
+
 
 
     // jwt generate
-    app.post('/jwt', async (req, res) => {    
+    app.post('/jwt', async (req, res) => {
       const email = req.body
       console.log(email)
       const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, {
@@ -94,19 +95,19 @@ async function run() {
     })
 
 
-                
 
-    app.get('/getSingleQuery', async (req , res) => {
+
+    app.get('/getSingleQuery', async (req, res) => {
       try {
-        const cursor = productQueryCollection.find().sort({_id:-1});
+        const cursor = productQueryCollection.find().sort({ _id: -1 });
         const result = await cursor.toArray();
         res.send(result);
       }
       catch (error) {
-        res.status(500).send({ message: "some thing went wrong" })  
+        res.status(500).send({ message: "some thing went wrong" })
       }
-    })     
-             
+    })
+
 
     app.get('/queryDetails/:id', async (req, res) => {
       try {
@@ -118,18 +119,18 @@ async function run() {
       catch (error) {
         res.status(500).send({ message: "some thing went wrong" })
       }
-    })    
-                    
-           
+    })
+
+
 
     app.get("/mySingleQuery/:email", async (req, res) => {
-    try {
-      // const tokenEmail = req.user.email
-      const email = req.params.email
-      // if (tokenEmail !== email) {
-      //   return res.status(403).send({ message: 'forbidden access' })
-      // }              
-      const result = await productQueryCollection.find({ 'posterInfo.userEmail':email }).sort({_id:-1}).toArray();
+      try {
+        // const tokenEmail = req.user.email
+        const email = req.params.email
+        // if (tokenEmail !== email) {
+        //   return res.status(403).send({ message: 'forbidden access' })
+        // }              
+        const result = await productQueryCollection.find({ 'posterInfo.userEmail': email }).sort({ _id: -1 }).toArray();
         console.log(result)
         res.send(result)
       }
@@ -139,7 +140,7 @@ async function run() {
 
     })
 
-    
+
 
     app.post('/addSingleQuery', async (req, res) => {
       try {
@@ -158,56 +159,72 @@ async function run() {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) }
       const options = { upsert: true };
-      const updatedItem = req.body;   
+      const updatedItem = req.body;
       const item = {
-          $set: {
-            ...updatedItem       
-          }
+        $set: {
+          ...updatedItem
+        }
       }
 
       const result = await productQueryCollection.updateOne(filter, item, options);
       res.send(result);
-  })
+    })
 
     app.delete('/deleteQueryItem/:id', async (req, res) => {
-   try{
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) }
-    const result = await productQueryCollection.deleteOne(query);
-    res.send(result);
-   }
-   catch (error) {
-    res.status(500).send({ message: "some thing went wrong" })
-  }
-  })
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) }
+        const result = await productQueryCollection.deleteOne(query);
+        res.send(result);
+      }
+      catch (error) {
+        res.status(500).send({ message: "some thing went wrong" })
+      }
+    })
 
 
-// Art & Craft SubCategory Section
+    // Recommend Section
 
-app.get('/artCraftSubcategory', async (req , res) => {
-  try {
-    const cursor = SubcategoryCollection.find();
-    const result = await cursor.toArray();
-    res.send(result);
-  }
-  catch (error) {
-    res.status(500).send({ message: "some thing went wrong" })
-  }
-})                    
+    app.get('/recommendQuery', async (req, res) => {
+      try {
+        const cursor = recommendQueryCollection.find();
+        const result = await cursor.toArray();
+        res.send(result);
+      }
+      catch (error) {
+        res.status(500).send({ message: "some thing went wrong" })
+      }
+    })
 
 
-  app.get('/artCraftSubcategory/:id', async (req, res) => {
-    try {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) }
-      const result = await SubcategoryCollection.findOne(query);
-      res.send(result);
-    }
-    catch (error) {
-      res.status(500).send({ message: "some thing went wrong" })
-    }
-  })
+    // Save recommend data in db
+    app.post('/addRecommend', async (req, res) => {
+      const recommendationData = req.body
 
+      // check if its a duplicate request
+      // const query = {
+      //   email: recommendationData.email,
+      //   jobId: recommendationData.jobId,
+      // }
+      // const alreadyApplied = await recommendQueryCollection.findOne(query)
+      // console.log(alreadyApplied)
+      // if (alreadyApplied) {
+      //   return res
+      //     .status(400)
+      //     .send('You have already placed a bid on this job.')
+      // }
+
+      const result = await recommendQueryCollection.insertOne(recommendationData)
+
+      // update recommend count in productQuery collection
+      const updateDoc = {
+        $inc: { recommendation_count: 1 },
+      }
+      const jobQuery = { _id: new ObjectId(recommendationData.queryId) }
+      const updateBidCount = await productQueryCollection.updateOne(jobQuery, updateDoc)
+      console.log(updateBidCount)
+      res.send(result)
+    })
 
 
     // Send a ping to confirm a successful connection
@@ -220,7 +237,7 @@ app.get('/artCraftSubcategory', async (req , res) => {
 }
 run().catch(console.dir);
 
- 
+
 app.get('/', (req, res) => {
   res.send('Akeneo server')
 })
