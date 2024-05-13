@@ -190,7 +190,7 @@ async function run() {
         const cursor = recommendQueryCollection.find();
         const result = await cursor.toArray();
         res.send(result);
-      }
+      }                    
       catch (error) {
         res.status(500).send({ message: "some thing went wrong" })
       }
