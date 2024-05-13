@@ -187,6 +187,7 @@ async function run() {
 
     app.get('/recommendQuery', async (req, res) => {
       try {
+
         const cursor = recommendQueryCollection.find();
         const result = await cursor.toArray();
         res.send(result);
@@ -200,7 +201,7 @@ async function run() {
     // Save recommend data in db
     app.post('/addRecommend', async (req, res) => {
       const recommendationData = req.body
-
+     console.log(recommendationData)
       // check if its a duplicate request
       // const query = {
       //   email: recommendationData.email,
