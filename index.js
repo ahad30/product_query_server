@@ -119,8 +119,8 @@ async function run() {
         res.status(500).send({ message: "some thing went wrong" })
       }
     })    
-
-
+                    
+           
 
     app.get("/mySingleQuery/:email", async (req, res) => {
     try {
