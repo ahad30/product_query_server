@@ -105,7 +105,7 @@ async function run() {
       catch (error) {
         res.status(500).send({ message: "some thing went wrong" })  
       }
-    })
+    })     
              
 
     app.get('/queryDetails/:id', async (req, res) => {
