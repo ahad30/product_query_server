@@ -9,8 +9,10 @@ const port = process.env.PORT || 5000;
 
 const corsOptions = {
   origin: [
-    'http://localhost:5173',
-    'http://localhost:5174'
+    "http://localhost:5173",
+    "https://assignment-11-ahad.netlify.app",
+    "https://ahad-product-query.web.app",
+    "https://ahad-product-query.firebaseapp.com",
   ],
   credentials: true,
   optionSuccessStatus: 200,
@@ -98,16 +100,33 @@ async function run() {
 
 
 
+    // app.get('/getSingleQuery', async (req, res) => {
+    //   try {
+    //     const cursor = productQueryCollection.find().sort({ _id: -1 });
+    //     const result = await cursor.toArray();
+    //     res.send(result);
+    //   }
+    //   catch (error) {
+    //     res.status(500).send({ message: "some thing went wrong" })
+    //   }
+    // })
+
+     
     app.get('/getSingleQuery', async (req, res) => {
-      try {
-        const cursor = productQueryCollection.find().sort({ _id: -1 });
-        const result = await cursor.toArray();
-        res.send(result);
+ 
+      const sort = req.query.sort
+      const search = req.query.search
+      console.log(search);
+
+      let query = {
+        itemName: { $regex: search, $options: 'i' },
       }
-      catch (error) {
-        res.status(500).send({ message: "some thing went wrong" })
-      }
-    })
+      let options = {}
+      if (sort) options = { sort: { deadline: sort === 'asc' ? 1 : -1 } }
+      const result = await productQueryCollection.find(query, options).toArray()
+
+      res.send(result)
+  })
 
 
     app.get('/queryDetails/:id', async (req, res) => {
@@ -124,14 +143,14 @@ async function run() {
 
 
 
-    app.get("/mySingleQuery/:email", verifyToken, async (req, res) => {
+    app.get("/mySingleQuery/:email",verifyToken, async (req, res) => {
       try {
         // const tokenEmail = req.user.email
         const email = req.params.email
         // if (tokenEmail !== email) {
         //   return res.status(403).send({ message: 'forbidden access' })
         // }              
-        const result = await productQueryCollection.find({ 'posterInfo.userEmail': email }).sort({ _id: -1 }).toArray();
+        const result = await productQueryCollection.find({ 'posterInfo.userEmail': email }).sort({ _id:-1}).toArray();
         console.log(result)
         res.send(result)
       }
@@ -198,6 +217,14 @@ async function run() {
       }
     })
 
+
+
+
+
+
+
+
+    
 
     // Save recommend data in db
     app.post('/addRecommend', async (req, res) => {
