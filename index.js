@@ -124,7 +124,7 @@ async function run() {
 
 
 
-    app.get("/mySingleQuery/:email",verifyToken, async (req, res) => {
+    app.get("/mySingleQuery/:email", verifyToken, async (req, res) => {
       try {
         // const tokenEmail = req.user.email
         const email = req.params.email
@@ -147,7 +147,7 @@ async function run() {
       try {
         const newProduct = req.body;
         console.log(newProduct);
-        const result = await productQueryCollection.insertOne(newProduct);
+        const result = await productQueryCollection.insertOne({ ...newProduct, recommended: [] });
         res.send(result);
       }
       catch (error) {
@@ -192,7 +192,7 @@ async function run() {
         const cursor = recommendQueryCollection.find();
         const result = await cursor.toArray();
         res.send(result);
-      }                    
+      }
       catch (error) {
         res.status(500).send({ message: "some thing went wrong" })
       }
@@ -202,7 +202,7 @@ async function run() {
     // Save recommend data in db
     app.post('/addRecommend', async (req, res) => {
       const recommendationData = req.body
-     console.log(recommendationData)
+      console.log(recommendationData)
       // check if its a duplicate request
       // const query = {
       //   email: recommendationData.email,
@@ -219,14 +219,34 @@ async function run() {
       const result = await recommendQueryCollection.insertOne(recommendationData)
 
       // update recommend count in productQuery collection
-      const updateDoc = {
-        $inc: { recommendation_count: 1 },
-      }
-      const jobQuery = { _id: new ObjectId(recommendationData.queryId) }
-      const updateBidCount = await productQueryCollection.updateOne(jobQuery, updateDoc)
-      console.log(updateBidCount)
+      // const updateDoc = {
+      //   $inc: { recommendation_count: 1 },
+      // }
+      // const jobQuery = { _id: new ObjectId(recommendationData.queryId) }
+      // const updateBidCount = await productQueryCollection.updateOne(jobQuery, updateDoc)
+      // console.log(updateBidCount)
       res.send(result)
     })
+
+
+    app.put('/addComment/:id', async (req, res) => {
+      const id = req.params.id;
+      const recommendationData = req.body;
+
+      try {
+        const result = await productQueryCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $push: { recommended: recommendationData } }
+        );
+
+        console.log(result);
+        res.send({ result: result });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: 'An error occurred while adding the comment.' });
+      }
+    });
+
 
 
     // Send a ping to confirm a successful connection
