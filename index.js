@@ -25,6 +25,7 @@ app.use(cookieParser())
 
 // verify jwt middleware
 const verifyToken = (req, res, next) => {
+  console.log(req?.cookies)
   const token = req?.cookies?.token
   console.log(token)
   if (!token) return res.status(401).send({ message: 'unauthorized access' })
@@ -32,7 +33,7 @@ const verifyToken = (req, res, next) => {
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
       if (err) {
         console.log(err)
-        return res.status(401).send({ message: 'unauthorized access' })
+        return res.status(403).send({ message: 'unauthorized access' })
       }
       console.log(decoded)
 
@@ -60,7 +61,7 @@ async function run() {
     // await client.connect();
 
     const productQueryCollection = client.db('productQueriesDB').collection('productQuery');
-    const recommendQueryCollection = client.db('recommendQueryDB').collection('recommendQuery');
+    const recommendQueryCollection = client.db('productQueriesDB').collection('recommendQuery');
 
 
 
@@ -123,7 +124,7 @@ async function run() {
 
 
 
-    app.get("/mySingleQuery/:email", async (req, res) => {
+    app.get("/mySingleQuery/:email",verifyToken, async (req, res) => {
       try {
         // const tokenEmail = req.user.email
         const email = req.params.email
