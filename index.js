@@ -65,6 +65,10 @@ async function run() {
     const productQueryCollection = client.db('productQueriesDB').collection('productQuery');
     const recommendQueryCollection = client.db('productQueriesDB').collection('recommendQuery');
 
+    const index = { itemName: 1, brandName: 1 }
+    const indextOptions = { name: "ProductName" }
+    const result = await productQueryCollection.createIndex(index, indextOptions)
+
 
 
     // jwt generate
@@ -97,6 +101,22 @@ async function run() {
         .send({ success: true })
     })
 
+
+    app.get("/products", async (req, res) => {
+      try {
+        const searchText = req.query.search
+        console.log(searchText)
+        const result = await productQueryCollection.find({
+          $or: [
+            { itemName: { $regex: searchText, $options: "i" } },
+            { brandName: { $regex: searchText, $options: "i" } }
+          ]
+        }).toArray()
+        res.send({ result })
+      } catch (error) {
+        res.status(404).send({ error })
+      }
+    })
 
 
 
@@ -143,7 +163,7 @@ async function run() {
 
 
 
-    app.get("/mySingleQuery/:email",verifyToken, async (req, res) => {
+    app.get("/mySingleQuery/:email", async (req, res) => {
       try {
         // const tokenEmail = req.user.email
         const email = req.params.email
@@ -205,17 +225,17 @@ async function run() {
 
     // Recommend Section
 
-    app.get('/recommendQuery', async (req, res) => {
-      try {
+    // app.get('/recommendQuery', async (req, res) => {
+    //   try {
 
-        const cursor = recommendQueryCollection.find();
-        const result = await cursor.toArray();
-        res.send(result);
-      }
-      catch (error) {
-        res.status(500).send({ message: "some thing went wrong" })
-      }
-    })
+    //     const cursor = recommendQueryCollection.find();
+    //     const result = await cursor.toArray();
+    //     res.send(result);
+    //   }
+    //   catch (error) {
+    //     res.status(500).send({ message: "some thing went wrong" })
+    //   }
+    // })
 
 
 
@@ -273,6 +293,14 @@ async function run() {
         res.status(500).send({ error: 'An error occurred while adding the comment.' });
       }
     });
+
+
+    app.get('/myRecommend/:email', verifyToken, async (req, res) => {
+      const email = req.params.email
+      const query = { email }
+      const result = await productQueryCollection.find(query).toArray()
+      res.send(result)
+    })
 
 
 
