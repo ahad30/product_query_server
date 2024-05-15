@@ -65,9 +65,9 @@ async function run() {
     const productQueryCollection = client.db('productQueriesDB').collection('productQuery');
     const recommendQueryCollection = client.db('productQueriesDB').collection('recommendQuery');
 
-    const index = { itemName: 1, brandName: 1 }
-    const indextOptions = { name: "ProductName" }
-    const result = await productQueryCollection.createIndex(index, indextOptions)
+    // const index = { itemName: 1, brandName: 1 }
+    // const indextOptions = { name: "ProductName" }
+    // const result = await productQueryCollection.createIndex(index, indextOptions)
 
 
 
@@ -119,36 +119,18 @@ async function run() {
     })
 
 
-
-    // app.get('/getSingleQuery', async (req, res) => {
-    //   try {
-    //     const cursor = productQueryCollection.find().sort({ _id: -1 });
-    //     const result = await cursor.toArray();
-    //     res.send(result);
-    //   }
-    //   catch (error) {
-    //     res.status(500).send({ message: "some thing went wrong" })
-    //   }
-    // })
+    app.get('/getSingleQuery', async (req, res) => {
+      try {
+        const cursor = productQueryCollection.find().sort({ _id: -1 });
+        const result = await cursor.toArray();
+        res.send(result);
+      }
+      catch (error) {
+        res.status(500).send({ message: "some thing went wrong" })
+      }
+    })
 
      
-    app.get('/getSingleQuery', async (req, res) => {
- 
-      const sort = req.query.sort
-      const search = req.query.search
-      console.log(search);
-
-      let query = {
-        itemName: { $regex: search, $options: 'i' },
-      }
-      let options = {}
-      if (sort) options = { sort: { deadline: sort === 'asc' ? 1 : -1 } }
-      const result = await productQueryCollection.find(query, options).toArray()
-
-      res.send(result)
-  })
-
-
     app.get('/queryDetails/:id', async (req, res) => {
       try {
         const id = req.params.id;
@@ -225,57 +207,6 @@ async function run() {
 
     // Recommend Section
 
-    // app.get('/recommendQuery', async (req, res) => {
-    //   try {
-
-    //     const cursor = recommendQueryCollection.find();
-    //     const result = await cursor.toArray();
-    //     res.send(result);
-    //   }
-    //   catch (error) {
-    //     res.status(500).send({ message: "some thing went wrong" })
-    //   }
-    // })
-
-
-
-
-
-
-
-
-    
-
-    // Save recommend data in db
-    app.post('/addRecommend', async (req, res) => {
-      const recommendationData = req.body
-      console.log(recommendationData)
-      // check if its a duplicate request
-      // const query = {
-      //   email: recommendationData.email,
-      //   jobId: recommendationData.jobId,
-      // }
-      // const alreadyApplied = await recommendQueryCollection.findOne(query)
-      // console.log(alreadyApplied)
-      // if (alreadyApplied) {
-      //   return res
-      //     .status(400)
-      //     .send('You have already placed a bid on this job.')
-      // }
-
-      const result = await recommendQueryCollection.insertOne(recommendationData)
-
-      // update recommend count in productQuery collection
-      // const updateDoc = {
-      //   $inc: { recommendation_count: 1 },
-      // }
-      // const jobQuery = { _id: new ObjectId(recommendationData.queryId) }
-      // const updateBidCount = await productQueryCollection.updateOne(jobQuery, updateDoc)
-      // console.log(updateBidCount)
-      res.send(result)
-    })
-
-
     app.put('/addComment/:id', async (req, res) => {
       const id = req.params.id;
       const recommendationData = req.body;
@@ -295,12 +226,48 @@ async function run() {
     });
 
 
-    app.get('/myRecommend/:email', verifyToken, async (req, res) => {
-      const email = req.params.email
-      const query = { email }
-      const result = await productQueryCollection.find(query).toArray()
-      res.send(result)
+    app.get('/myRecommend/:email', async (req, res) => {
+      try {
+        const email = req.params.email;
+        const result = await productQueryCollection.find({ 'recommended.userEmail': email }).toArray();
+        console.log(result)
+        const userRecommendations = result.map(item => ({
+          ...item,
+          recommended: item.recommended.filter(recommendation => recommendation.userEmail === email)
+        }));
+        res.send(userRecommendations);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: 'An error occurred while fetching recommendations.' });
+      }
     })
+    
+
+
+    app.delete('/deleteRecommend/:id', async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        
+        // Retrieve the item to be deleted
+        const item = await productQueryCollection.deleteOne(query);
+        if (!item) {
+          return res.status(404).send({ message: 'Item not found' });
+        }
+    
+        // Filter out the recommendations made by the user
+        const updatedRecommendations = item.recommended.filter(recommendation => recommendation.userEmail === req.user.email);
+    
+        // Update the item in the database with the filtered recommendations
+        const result = await productQueryCollection.updateOne(query, { $set: { recommended: updatedRecommendations } });
+        
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: 'An error occurred while deleting the item.' });
+      }
+    });
+    
 
 
 
