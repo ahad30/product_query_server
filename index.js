@@ -63,6 +63,10 @@ async function run() {
     const productQueryCollection = client.db('productQueriesDB').collection('productQuery');
     const recommendQueryCollection = client.db('productQueriesDB').collection('recommendQuery');
 
+    const index = { itemName: 1, brandName: 1 }
+    const indextOptions = { name: "ProductName" }
+    const result = await productQueryCollection.createIndex(index, indextOptions)
+
 
 
     // jwt generate
@@ -95,6 +99,22 @@ async function run() {
         .send({ success: true })
     })
 
+
+    app.get("/products", async (req, res) => {
+      try {
+        const searchText = req.query.search
+        console.log(searchText)
+        const result = await productQueryCollection.find({
+          $or: [
+            { itemName: { $regex: searchText, $options: "i" } },
+            { brandName: { $regex: searchText, $options: "i" } }
+          ]
+        }).toArray()
+        res.send({ result })
+      } catch (error) {
+        res.status(404).send({ error })
+      }
+    })
 
 
 
