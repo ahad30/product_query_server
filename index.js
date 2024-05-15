@@ -144,7 +144,7 @@ async function run() {
 
 
 
-    app.get("/mySingleQuery/:email", verifyToken, async (req, res) => {
+    app.get("/mySingleQuery/:email", async (req, res) => {
       try {
         // const tokenEmail = req.user.email
         const email = req.params.email
@@ -206,17 +206,17 @@ async function run() {
 
     // Recommend Section
 
-    app.get('/recommendQuery', async (req, res) => {
-      try {
+    // app.get('/recommendQuery', async (req, res) => {
+    //   try {
 
-        const cursor = recommendQueryCollection.find();
-        const result = await cursor.toArray();
-        res.send(result);
-      }
-      catch (error) {
-        res.status(500).send({ message: "some thing went wrong" })
-      }
-    })
+    //     const cursor = recommendQueryCollection.find();
+    //     const result = await cursor.toArray();
+    //     res.send(result);
+    //   }
+    //   catch (error) {
+    //     res.status(500).send({ message: "some thing went wrong" })
+    //   }
+    // })
 
 
     // Save recommend data in db
@@ -266,6 +266,14 @@ async function run() {
         res.status(500).send({ error: 'An error occurred while adding the comment.' });
       }
     });
+
+
+    app.get('/myRecommend/:email', verifyToken, async (req, res) => {
+      const email = req.params.email
+      const query = { email }
+      const result = await productQueryCollection.find(query).toArray()
+      res.send(result)
+    })
 
 
 
