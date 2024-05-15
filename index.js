@@ -249,16 +249,13 @@ async function run() {
         const id = req.params.id;
         const query = { _id: new ObjectId(id) };
         
-        // Retrieve the item to be deleted
         const item = await productQueryCollection.deleteOne(query);
         if (!item) {
           return res.status(404).send({ message: 'Item not found' });
         }
     
-        // Filter out the recommendations made by the user
         const updatedRecommendations = item.recommended.filter(recommendation => recommendation.userEmail === req.user.email);
     
-        // Update the item in the database with the filtered recommendations
         const result = await productQueryCollection.updateOne(query, { $set: { recommended: updatedRecommendations } });
         
         res.send(result);
